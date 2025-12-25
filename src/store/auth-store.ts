@@ -13,15 +13,20 @@ interface AuthActions {
   checkAuth: () => void;
 }
 
-const initialState: AuthState = {
-  isLoggedIn: false,
-  accessToken: null,
-  refreshToken: null,
+const getInitialState = (): AuthState => {
+  const accessToken = localStorage.getItem('accessToken');
+  const refreshToken = localStorage.getItem('refreshToken');
+
+  return {
+    isLoggedIn: !!(accessToken && refreshToken),
+    accessToken,
+    refreshToken,
+  };
 };
 
 export const useAuthStore = create<AuthState & AuthActions>()(
   devtools(
-    combine(initialState, (set) => ({
+    combine(getInitialState(), (set) => ({
       login: (accessToken, refreshToken) => {
         localStorage.setItem('accessToken', accessToken);
         localStorage.setItem('refreshToken', refreshToken);

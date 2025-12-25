@@ -1,5 +1,9 @@
 @import 'tailwindcss';
 
+body {
+  background: linear-gradient(to bottom, #f6f7f9, #e9ecf5);
+}
+
 /* :root {
   --color-primary: #4c79ff;
   --color-indigo: #023e99;

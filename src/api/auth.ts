@@ -1,4 +1,5 @@
 import { API_URL } from '../../constant.ts';
+import axiosInstance from '../utils/axios-instance.ts';
 export async function signIn({
   email,
   password,
@@ -20,5 +21,11 @@ export async function signIn({
     throw new Error(data.error.message);
   }
 
+  return data;
+}
+
+export async function signOut() {
+  const response = await axiosInstance.post(`${API_URL}/api/auth/logout`);
+  const data = response.data;
   return data;
 }

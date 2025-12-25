@@ -30,3 +30,14 @@ export async function postProfile({
   const data = await response.json();
   return data;
 }
+
+export async function getProfile() {
+  const response = await fetch(`${API_URL}/api/profile`, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+      'Content-Type': 'application/json',
+    },
+  });
+  const data = await response.json();
+  return data;
+}

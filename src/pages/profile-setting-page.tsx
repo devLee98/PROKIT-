@@ -93,6 +93,7 @@ export default function ProfileSettingPage() {
   //프로필 이미지관련
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null); // ✅ 파일 객체 저장
 
   const handleFileInputClick = () => {
     fileInputRef.current?.click();
@@ -116,6 +117,7 @@ export default function ProfileSettingPage() {
       e.target.value = ''; // input 초기화
       return;
     }
+    setSelectedFile(file);
     // 이미지 미리보기 생성
     const reader = new FileReader();
     reader.onloadend = () => {
@@ -130,9 +132,12 @@ export default function ProfileSettingPage() {
   const { mutate: postFile } = usePostFile();
   const { mutate: postProfile } = usePostProfile();
   const onSubmit = (data: ProfileSettingFormData) => {
+    if (!selectedFile) {
+      postFile({ fileName: '', contentType: '' });
+    }
     // 1. usePostFile 호출
     postFile(
-      { fileName: data.profileImage, contentType: 'image/png' },
+      { fileName: selectedFile!.name, contentType: selectedFile!.type },
       {
         onSuccess: (response) => {
           const key = response.key;

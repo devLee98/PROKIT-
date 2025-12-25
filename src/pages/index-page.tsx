@@ -49,7 +49,7 @@ export default function IndexPage() {
   const formatTime = (time: number) => String(time).padStart(2, '0');
 
   return (
-    <div className="container mx-auto mt-24 flex flex-col items-center justify-center gap-20">
+    <div className="container mx-auto mt-24 flex min-h-screen flex-col items-center justify-center gap-20">
       <h1 className="text-center text-[72px] font-bold text-[#4c79ff]/30">
         {isRunning ? '10시간 채우자!' : '오늘도 열심히 달려봐요!'}
       </h1>
