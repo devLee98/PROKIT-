@@ -1,0 +1,119 @@
+import { useEffect, useRef, useState } from 'react';
+import finish from '../assets/finish.svg';
+import pause from '../assets/pause.svg';
+import start from '../assets/start.svg';
+import timeDashboard from '../assets/time-dash.svg';
+
+export default function IndexPage() {
+  const [isRunning, setIsRunning] = useState(false);
+  const [hours, setHours] = useState(0);
+  const [minutes, setMinutes] = useState(0);
+  const [seconds, setSeconds] = useState(0);
+  const intervalRef = useRef<number | null>(null);
+  const handleStart = () => {
+    setIsRunning(true);
+  };
+  const handlePause = () => {
+    setIsRunning(false);
+  };
+  const handleFinish = () => {
+    setIsRunning(false);
+    setHours(0);
+    setMinutes(0);
+    setSeconds(0);
+  };
+
+  useEffect(() => {
+    if (!isRunning) return;
+
+    intervalRef.current = setInterval(() => {
+      setSeconds((prev) => {
+        if (prev === 59) {
+          setMinutes((min) => {
+            if (min === 59) {
+              setHours((h) => h + 1);
+              return 0;
+            }
+            return min + 1;
+          });
+          return 0;
+        }
+        return prev + 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(intervalRef.current as number);
+  }, [isRunning]);
+
+  // 두 자리 수로 포맷
+  const formatTime = (time: number) => String(time).padStart(2, '0');
+
+  return (
+    <div className="container mx-auto mt-24 flex flex-col items-center justify-center gap-20">
+      <h1 className="text-center text-[72px] font-bold text-[#4c79ff]/30">
+        {isRunning ? '10시간 채우자!' : '오늘도 열심히 달려봐요!'}
+      </h1>
+
+      <div className="flex items-center justify-center gap-24">
+        <div className="h-[268px] w-[264px] bg-gray-200 bg-linear-to-br from-[#4c79ff]/0 to-[#4c79ff]/20 px-2 pt-2 pb-9">
+          <div className="flex flex-col items-center justify-center">
+            <div className="font-digital flex h-[200px] w-[250px] items-center justify-center text-[154px]">
+              {formatTime(hours)}
+            </div>
+            <span>HOURS</span>
+          </div>
+        </div>
+
+        <img src={timeDashboard} alt="time-dashboard" />
+
+        <div className="h-[268px] w-[264px] bg-gray-200 bg-linear-to-br from-[#4c79ff]/0 to-[#4c79ff]/20 px-2 pt-2 pb-9">
+          <div className="flex flex-col items-center justify-center">
+            <div className="font-digital flex h-[200px] w-[250px] items-center justify-center text-[154px]">
+              {formatTime(minutes)}
+            </div>
+            <span>MINUTES</span>
+          </div>
+        </div>
+
+        <img src={timeDashboard} alt="time-dashboard" />
+
+        <div className="h-[268px] w-[264px] bg-gray-200 bg-linear-to-br from-[#4c79ff]/0 to-[#4c79ff]/20 px-2 pt-2 pb-9">
+          <div className="flex flex-col items-center justify-center">
+            <div className="font-digital flex h-[200px] w-[250px] items-center justify-center text-[154px]">
+              {formatTime(seconds)}
+            </div>
+            <span>SECONDS</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-center gap-20">
+        <img
+          src={start}
+          width="100"
+          height="100"
+          onClick={isRunning ? undefined : handleStart}
+          className="cursor-pointer"
+          style={{ opacity: isRunning ? 0.1 : 1 }}
+        />
+
+        <img
+          src={pause}
+          width="100"
+          height="100"
+          onClick={isRunning ? handlePause : undefined}
+          className="cursor-pointer"
+          style={{ opacity: isRunning ? 1 : 0.1 }}
+        />
+        <img
+          src={finish}
+          width="100"
+          height="100"
+          onClick={isRunning ? handleFinish : undefined}
+          className="cursor-pointer"
+          style={{ opacity: isRunning ? 1 : 0.1 }}
+        />
+      </div>
+    </div>
+  );
+}

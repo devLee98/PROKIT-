@@ -1,0 +1,27 @@
+@import 'tailwindcss';
+
+/* :root {
+  --color-primary: #4c79ff;
+  --color-indigo: #023e99;
+  --color-informative: #2563eb;
+} */
+
+@font-face {
+  font-family: 'DigitalNumbers';
+  src: url('/fonts/digital-7.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+.font-digital {
+  font-family: 'DigitalNumbers', sans-serif;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
