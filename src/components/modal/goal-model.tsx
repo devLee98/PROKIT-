@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 
 interface GoalModalProps {
   isOpen: boolean;
@@ -27,13 +28,6 @@ export default function GoalModal({
 
   // ✅ 모달에서 시작하기 버튼 클릭 → 바로 시작!
   const handleStart = () => {
-    // 모달에서 타이머 시작 로직 수행
-    console.log('타이머 시작!', goals);
-
-    // API 호출이나 다른 작업이 필요하면 여기서 처리
-    // await startTimer(goals);
-
-    // 부모에게 "시작했어"라고만 알려줌
     onStartTimer();
   };
 
@@ -45,9 +39,15 @@ export default function GoalModal({
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/50">
-      <div className="w-[500px] rounded-lg bg-white p-6">
+  return createPortal(
+    <div
+      className="fixed inset-0 flex items-center justify-center bg-black/50"
+      onClick={handleCancel}
+    >
+      <div
+        className="w-[500px] rounded-lg bg-white p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
         <h2 className="mb-4 text-2xl font-bold">공부 목표 설정</h2>
 
         <div className="mb-4">
@@ -111,6 +111,7 @@ export default function GoalModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

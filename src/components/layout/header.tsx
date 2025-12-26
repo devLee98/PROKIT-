@@ -10,9 +10,9 @@ import { useGetProfileData } from '../../hooks/query/use-get-profile-data';
 import { useCheckAuth, useIsLoggedIn } from '../../store/auth-store';
 
 export default function Header() {
-  const modalRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const [isModalOpen, setIsModalOpen] = useDetectClose(
-    modalRef as React.RefObject<HTMLDivElement>,
+    dropdownRef as React.RefObject<HTMLDivElement>,
     false,
   );
   const toggleModalOpen = () => {
@@ -47,44 +47,46 @@ export default function Header() {
             </Link>
           </div>
         </div>
-        <div
-          className="flex h-[40px] items-center justify-between"
-          onClick={toggleModalOpen}
-        >
-          {isLoggedIn ? (
-            <>
-              <div className="flex items-center gap-4">
-                {/* 안전성 추가 */}
-                {isLoggedIn && !isProfileDataLoading && (
-                  <>
-                    <img
-                      className="h-[40px] w-[40px] rounded-full"
-                      src={imageUrl}
-                      alt="프로필이미지"
-                    />
-                    <p>{profileData.nickname}</p>
-                  </>
-                )}
-              </div>
-              {isModalOpen && (
-                <div>
-                  <div className="absolute top-4 right-0 flex h-[104px] w-[130px] flex-col justify-between gap-2 border border-[#ccddd6] px-3 py-4">
-                    <div className="h-[20px] w-[106px] hover:font-bold">
-                      <Link to="/my">마이페이지</Link>
-                    </div>
-                    <div className="h-[20px] w-[106px] hover:font-bold">
-                      <button onClick={() => signOut()}>로그아웃</button>
+        <div className="relative" ref={dropdownRef}>
+          <div
+            className="flex h-[40px] items-center justify-between"
+            onClick={toggleModalOpen}
+          >
+            {isLoggedIn ? (
+              <>
+                <div className="flex items-center gap-4">
+                  {/* 안전성 추가 */}
+                  {isLoggedIn && !isProfileDataLoading && (
+                    <>
+                      <img
+                        className="h-[40px] w-[40px] rounded-full"
+                        src={imageUrl}
+                        alt="프로필이미지"
+                      />
+                      <p>{profileData.nickname}</p>
+                    </>
+                  )}
+                </div>
+                {isModalOpen && (
+                  <div>
+                    <div className="absolute top-12 left-0 flex h-[104px] w-[130px] flex-col justify-between gap-2 border border-[#ccddd6] bg-white px-3 py-4">
+                      <div className="h-[20px] w-[106px] hover:font-bold">
+                        <Link to="/my">마이페이지</Link>
+                      </div>
+                      <div className="h-[20px] w-[106px] hover:font-bold">
+                        <button onClick={() => signOut()}>로그아웃</button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
-            </>
-          ) : (
-            <>
-              <Link to="/sign-in">로그인</Link>
-              <Link to="/sign-up">회원가입</Link>
-            </>
-          )}
+                )}
+              </>
+            ) : (
+              <>
+                <Link to="/sign-in">로그인</Link>
+                <Link to="/sign-up">회원가입</Link>
+              </>
+            )}
+          </div>
         </div>
       </header>
       <main>
