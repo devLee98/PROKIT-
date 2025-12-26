@@ -1,7 +1,9 @@
 import { useEffect, useRef } from 'react';
 import { Link, Outlet } from 'react-router-dom';
+import defaultAvatarImage from '../../assets/default-avatar.png';
 import logo from '../../assets/logo-name.svg';
 
+import { IMAGE_URL } from '../../../constant';
 import useDetectClose from '../../hooks/custom/use-detect-close';
 import { useSignOut } from '../../hooks/mutation/use-sign-out';
 import { useGetProfileData } from '../../hooks/query/use-get-profile-data';
@@ -16,7 +18,12 @@ export default function Header() {
   const toggleModalOpen = () => {
     setIsModalOpen(!isModalOpen);
   };
-  const { data: profileData } = useGetProfileData();
+
+  const { data: profileData, isLoading: isProfileDataLoading } =
+    useGetProfileData();
+  const imageUrl = profileData?.profile?.profileImage
+    ? `${IMAGE_URL}/${profileData.profile.profileImage}`
+    : defaultAvatarImage;
   const checkAuth = useCheckAuth();
   const isLoggedIn = useIsLoggedIn();
   const { mutate: signOut } = useSignOut();
@@ -47,14 +54,17 @@ export default function Header() {
           {isLoggedIn ? (
             <>
               <div className="flex items-center gap-4">
-                <img
-                  className="h-[40px] w-[40px]"
-                  src={logo}
-                  alt="profileImage"
-                />
-                <p className="text-[16px] font-bold text-[#023e99]">
-                  {profileData?.nickname}
-                </p>
+                {/* 안전성 추가 */}
+                {isLoggedIn && !isProfileDataLoading && (
+                  <>
+                    <img
+                      className="h-[40px] w-[40px] rounded-full"
+                      src={imageUrl}
+                      alt="프로필이미지"
+                    />
+                    <p>{profileData.nickname}</p>
+                  </>
+                )}
               </div>
               {isModalOpen && (
                 <div>

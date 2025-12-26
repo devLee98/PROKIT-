@@ -139,8 +139,16 @@ export default function ProfileSettingPage() {
     postFile(
       { fileName: selectedFile!.name, contentType: selectedFile!.type },
       {
-        onSuccess: (response) => {
+        onSuccess: async (response) => {
+          const presignedUrl = response.presignedUrl;
           const key = response.key;
+          await fetch(presignedUrl, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': selectedFile!.type,
+            },
+            body: selectedFile!,
+          });
 
           data.profileImage = key;
 

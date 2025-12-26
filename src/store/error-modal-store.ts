@@ -1,13 +1,13 @@
 import { create } from 'zustand';
 
-interface ModalState {
+interface ErrorModalState {
   isOpen: boolean;
   message: string;
   showError: (message: string) => void;
   closeModal: () => void;
 }
 
-export const useModalStore = create<ModalState>((set) => ({
+export const useErrorModalStore = create<ErrorModalState>((set) => ({
   isOpen: false,
   message: '',
   showError: (message: string) => set({ isOpen: true, message }),

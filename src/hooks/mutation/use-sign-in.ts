@@ -1,11 +1,11 @@
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { signIn } from '../../api/auth';
-import { useModalStore } from '../../store/modal-store';
+import { useErrorModalStore } from '../../store/error-modal-store';
 
 export function useSignIn() {
   const navigate = useNavigate();
-  const { showError } = useModalStore();
+  const { showError } = useErrorModalStore();
   return useMutation({
     mutationFn: signIn,
     onSuccess: (data) => {

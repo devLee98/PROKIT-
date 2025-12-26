@@ -3,19 +3,34 @@ import finish from '../assets/finish.svg';
 import pause from '../assets/pause.svg';
 import start from '../assets/start.svg';
 import timeDashboard from '../assets/time-dash.svg';
+import GoalModal from '../components/modal/goal-model';
+import { useGetTimer } from '../hooks/query/use-get-timer';
 
 export default function IndexPage() {
+  const { data: timerData, isError: isTimerError } = useGetTimer();
+
   const [isRunning, setIsRunning] = useState(false);
   const [hours, setHours] = useState(0);
   const [minutes, setMinutes] = useState(0);
   const [seconds, setSeconds] = useState(0);
+  const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
   const intervalRef = useRef<number | null>(null);
+
+  // 재생 버튼 클릭 → 모달 열기
   const handleStart = () => {
-    setIsRunning(true);
+    setIsGoalModalOpen(true);
   };
+
+  // ✅ 모달에서 시작하기를 누르면 → 모달 닫고 타이머 시작
+  const handleStartTimer = () => {
+    setIsRunning(true);
+    setIsGoalModalOpen(false);
+  };
+
   const handlePause = () => {
     setIsRunning(false);
   };
+
   const handleFinish = () => {
     setIsRunning(false);
     setHours(0);
@@ -45,11 +60,27 @@ export default function IndexPage() {
     return () => clearInterval(intervalRef.current as number);
   }, [isRunning]);
 
-  // 두 자리 수로 포맷
+  useEffect(() => {
+    if (isTimerError) {
+      setIsRunning(false);
+      setHours(0);
+      setMinutes(0);
+      setSeconds(0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isTimerError]);
+
   const formatTime = (time: number) => String(time).padStart(2, '0');
 
   return (
     <div className="container mx-auto mt-24 flex min-h-screen flex-col items-center justify-center gap-20">
+      {/* ✅ 모달에서 시작하기 누르면 handleStartTimer 호출 */}
+      <GoalModal
+        isOpen={isGoalModalOpen}
+        onClose={() => setIsGoalModalOpen(false)}
+        onStartTimer={handleStartTimer}
+      />
+
       <h1 className="text-center text-[72px] font-bold text-[#4c79ff]/30">
         {isRunning ? '10시간 채우자!' : '오늘도 열심히 달려봐요!'}
       </h1>

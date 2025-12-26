@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { useModalStore } from '../../store/modal-store';
+import { useErrorModalStore } from '../../store/error-modal-store';
 
 export function ErrorModal() {
-  const { isOpen, message, closeModal } = useModalStore();
+  const { isOpen, message, closeModal } = useErrorModalStore();
 
   useEffect(() => {
     if (isOpen) {

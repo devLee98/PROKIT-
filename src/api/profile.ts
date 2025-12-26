@@ -1,4 +1,5 @@
 import { API_URL } from '../../constant';
+import axiosInstance from '../utils/axios-instance';
 
 export async function postProfile({
   career,
@@ -32,12 +33,6 @@ export async function postProfile({
 }
 
 export async function getProfile() {
-  const response = await fetch(`${API_URL}/api/profile`, {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-      'Content-Type': 'application/json',
-    },
-  });
-  const data = await response.json();
-  return data;
+  const response = await axiosInstance.get('/api/profile');
+  return response.data;
 }
