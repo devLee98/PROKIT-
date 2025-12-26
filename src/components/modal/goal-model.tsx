@@ -40,8 +40,11 @@ export default function GoalModal({
 
   const { mutate: postTimer } = usePostTimer();
   const onSubmit = (data: FormSchema) => {
-    postTimer(data);
-    onStartTimer();
+    postTimer(data, {
+      onSuccess: () => {
+        onStartTimer(); // ✅ postTimer 성공 후 실행
+      },
+    });
   };
 
   const handleRemoveGoal = (index: number) => {
