@@ -4,6 +4,7 @@ import pause from '../assets/pause.svg';
 import start from '../assets/start.svg';
 import timeDashboard from '../assets/time-dash.svg';
 import GoalModal from '../components/modal/goal-model';
+import { useGetStudyTitle } from '../hooks/query/use-get-study-title';
 import { useGetTimer } from '../hooks/query/use-get-timer';
 
 export default function IndexPage() {
@@ -15,6 +16,9 @@ export default function IndexPage() {
   const [seconds, setSeconds] = useState(0);
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
   const intervalRef = useRef<number | null>(null);
+
+  const { data: studyTitleData } = useGetStudyTitle(isRunning);
+  const studyTitle = studyTitleData?.data?.studyLogs?.[0]?.todayGoal;
 
   // 재생 버튼 클릭 → 모달 열기
   const handleStart = () => {
@@ -82,7 +86,7 @@ export default function IndexPage() {
       />
 
       <h1 className="text-center text-[72px] font-bold text-[#4c79ff]/30">
-        {isRunning ? '10시간 채우자!' : '오늘도 열심히 달려봐요!'}
+        {isRunning ? studyTitle : '오늘도 열심히 달려봐요!'}
       </h1>
 
       <div className="flex items-center justify-center gap-24">
