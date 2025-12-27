@@ -1,7 +1,7 @@
 import axiosInstance from '../utils/axios-instance';
 
 export async function getStudyTitle() {
-  const today = new Date().toLocaleDateString('en-CA');
+  const today = new Date().toISOString().split('T')[0];
   const response = await axiosInstance.get('/api/study-logs', {
     params: {
       page: 1,

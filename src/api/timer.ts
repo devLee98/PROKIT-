@@ -20,3 +20,23 @@ export async function postTimer({
 
   return response.data;
 }
+
+export async function updateTimer({
+  timerId,
+  timeSpent,
+}: {
+  timerId: string;
+  timeSpent: number;
+}) {
+  const date = new Date().toISOString(); //UTC 시간
+  const response = await axiosInstance.put(`/api/timers/${timerId}`, {
+    splitTimes: [
+      {
+        date,
+        timeSpent,
+      },
+    ],
+  });
+
+  return response.data;
+}

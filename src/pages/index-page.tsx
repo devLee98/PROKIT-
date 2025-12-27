@@ -4,47 +4,29 @@ import pause from '../assets/pause.svg';
 import start from '../assets/start.svg';
 import timeDashboard from '../assets/time-dash.svg';
 import GoalModal from '../components/modal/goal-model';
+import { useUpdateTimer } from '../hooks/mutation/use-update-timer';
 import { useGetStudyTitle } from '../hooks/query/use-get-study-title';
 import { useGetTimer } from '../hooks/query/use-get-timer';
 
 export default function IndexPage() {
-  const { data: timerData, isError: isTimerError } = useGetTimer();
-
   const [isRunning, setIsRunning] = useState(false);
   const [hours, setHours] = useState(0);
   const [minutes, setMinutes] = useState(0);
   const [seconds, setSeconds] = useState(0);
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
   const intervalRef = useRef<number | null>(null);
-
+  const { data: timerData, isError: isTimerError } = useGetTimer(isRunning);
   const { data: studyTitleData } = useGetStudyTitle(isRunning);
   const studyTitle = studyTitleData?.data?.studyLogs?.[0]?.todayGoal;
+  const { mutate: updateTimer } = useUpdateTimer();
 
-  // ✅ timerData가 들어오면 경과 시간 계산
-  useEffect(() => {
-    if (!timerData?.startTime) return;
-
-    // startTime부터 현재까지의 경과 시간(초) 계산
-    const startTime = new Date(timerData.startTime).getTime();
-
-    const now = new Date().getTime();
-
-    const elapsedSeconds = Math.floor((now - startTime) / 1000);
-
-    // 시, 분, 초로 변환
-    const h = Math.floor(elapsedSeconds / 3600);
-    const m = Math.floor((elapsedSeconds % 3600) / 60);
-    const s = elapsedSeconds % 60;
-
-    setHours(h);
-    setMinutes(m);
-    setSeconds(s);
-    setIsRunning(true); // 타이머 활성화
-  }, [timerData]);
-
-  // 재생 버튼 클릭 → 모달 열기
   const handleStart = () => {
-    setIsGoalModalOpen(true);
+    // 조건 확인
+    if (timerData) {
+      setIsRunning(true);
+    } else {
+      setIsGoalModalOpen(true);
+    }
   };
 
   // ✅ 모달에서 시작하기를 누르면 → 모달 닫고 타이머 시작
@@ -54,6 +36,15 @@ export default function IndexPage() {
   };
 
   const handlePause = () => {
+    const currentTimeSpent = hours * 3600 + minutes * 60 + seconds;
+    console.log('currentTimeSpent', currentTimeSpent);
+
+    // 서버에 일시정지 상태 업데이트
+    updateTimer({
+      timerId: timerData.timerId,
+      timeSpent: currentTimeSpent,
+    });
+
     setIsRunning(false);
   };
 
