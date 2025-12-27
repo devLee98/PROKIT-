@@ -3,8 +3,6 @@ import { devtools, persist } from 'zustand/middleware';
 
 interface AuthState {
   isLoggedIn: boolean;
-  accessToken: string | null;
-  refreshToken: string | null;
 
   // 액션
   login: (accessToken: string, refreshToken: string) => void;
@@ -17,22 +15,16 @@ export const useAuthStore = create<AuthState>()(
     persist(
       (set) => ({
         isLoggedIn: false,
-        accessToken: null,
-        refreshToken: null,
 
-        login: (accessToken, refreshToken) => {
+        login: () => {
           set({
             isLoggedIn: true,
-            accessToken,
-            refreshToken,
           });
         },
 
         logout: () => {
           set({
             isLoggedIn: false,
-            accessToken: null,
-            refreshToken: null,
           });
         },
 
@@ -43,14 +35,10 @@ export const useAuthStore = create<AuthState>()(
           if (accessToken && refreshToken) {
             set({
               isLoggedIn: true,
-              accessToken,
-              refreshToken,
             });
           } else {
             set({
               isLoggedIn: false,
-              accessToken: null,
-              refreshToken: null,
             });
           }
         },
@@ -59,8 +47,6 @@ export const useAuthStore = create<AuthState>()(
         name: 'auth-storage',
         partialize: (state) => ({
           isLoggedIn: state.isLoggedIn,
-          accessToken: state.accessToken,
-          refreshToken: state.refreshToken,
         }),
       },
     ),

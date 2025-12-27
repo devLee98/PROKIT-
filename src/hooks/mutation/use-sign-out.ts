@@ -10,6 +10,8 @@ export function useSignOut() {
     mutationFn: signOut,
     onSuccess: () => {
       logout();
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
       navigate('/sign-in');
     },
   });

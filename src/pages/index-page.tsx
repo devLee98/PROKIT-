@@ -20,6 +20,28 @@ export default function IndexPage() {
   const { data: studyTitleData } = useGetStudyTitle(isRunning);
   const studyTitle = studyTitleData?.data?.studyLogs?.[0]?.todayGoal;
 
+  // ✅ timerData가 들어오면 경과 시간 계산
+  useEffect(() => {
+    if (!timerData?.startTime) return;
+
+    // startTime부터 현재까지의 경과 시간(초) 계산
+    const startTime = new Date(timerData.startTime).getTime();
+
+    const now = new Date().getTime();
+
+    const elapsedSeconds = Math.floor((now - startTime) / 1000);
+
+    // 시, 분, 초로 변환
+    const h = Math.floor(elapsedSeconds / 3600);
+    const m = Math.floor((elapsedSeconds % 3600) / 60);
+    const s = elapsedSeconds % 60;
+
+    setHours(h);
+    setMinutes(m);
+    setSeconds(s);
+    setIsRunning(true); // 타이머 활성화
+  }, [timerData]);
+
   // 재생 버튼 클릭 → 모달 열기
   const handleStart = () => {
     setIsGoalModalOpen(true);
@@ -122,32 +144,34 @@ export default function IndexPage() {
         </div>
       </div>
 
-      <div className="flex items-center justify-center gap-20">
-        <img
-          src={start}
-          width="100"
-          height="100"
-          onClick={isRunning ? undefined : handleStart}
-          className="cursor-pointer"
-          style={{ opacity: isRunning ? 0.1 : 1 }}
-        />
+      <div>
+        <div className="flex items-center justify-center gap-20">
+          <img
+            src={start}
+            width="100"
+            height="100"
+            onClick={isRunning ? undefined : handleStart}
+            className="cursor-pointer"
+            style={{ opacity: isRunning ? 0.1 : 1 }}
+          />
 
-        <img
-          src={pause}
-          width="100"
-          height="100"
-          onClick={isRunning ? handlePause : undefined}
-          className="cursor-pointer"
-          style={{ opacity: isRunning ? 1 : 0.1 }}
-        />
-        <img
-          src={finish}
-          width="100"
-          height="100"
-          onClick={isRunning ? handleFinish : undefined}
-          className="cursor-pointer"
-          style={{ opacity: isRunning ? 1 : 0.1 }}
-        />
+          <img
+            src={pause}
+            width="100"
+            height="100"
+            onClick={isRunning ? handlePause : undefined}
+            className="cursor-pointer"
+            style={{ opacity: isRunning ? 1 : 0.1 }}
+          />
+          <img
+            src={finish}
+            width="100"
+            height="100"
+            onClick={isRunning ? handleFinish : undefined}
+            className="cursor-pointer"
+            style={{ opacity: isRunning ? 1 : 0.1 }}
+          />
+        </div>
       </div>
     </div>
   );
