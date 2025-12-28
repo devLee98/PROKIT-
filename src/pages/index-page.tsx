@@ -98,7 +98,7 @@ export default function IndexPage() {
         onStartTimer={handleStartTimer}
       />
 
-      <h1 className="text-center text-[72px] font-bold text-[#4c79ff]/30">
+      <h1 className="text-center text-[72px] font-bold text-[#4c79ff]/30 select-none">
         {isRunning ? studyTitle : '오늘도 열심히 달려봐요!'}
       </h1>
 
