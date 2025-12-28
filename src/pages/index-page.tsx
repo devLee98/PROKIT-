@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import finish from '../assets/finish.svg';
 import pause from '../assets/pause.svg';
+import resetIcon from '../assets/reset.svg';
 import start from '../assets/start.svg';
 import timeDashboard from '../assets/time-dash.svg';
 import GoalModal from '../components/modal/goal-model';
+import { useDeleteTimer } from '../hooks/mutation/use-delete-timer';
 import { useUpdateTimer } from '../hooks/mutation/use-update-timer';
 import { useGetStudyTitle } from '../hooks/query/use-get-study-title';
 import { useGetTimer } from '../hooks/query/use-get-timer';
@@ -14,15 +16,24 @@ export default function IndexPage() {
   const [minutes, setMinutes] = useState(0);
   const [seconds, setSeconds] = useState(0);
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
+  const [splitTimes, setSplitTimes] = useState<Array<{ timeSpent: number }>>(
+    [],
+  );
   const intervalRef = useRef<number | null>(null);
+  const sessionStartTimeRef = useRef<{
+    hours: number;
+    minutes: number;
+    seconds: number;
+  } | null>(null);
   const { data: timerData, isError: isTimerError } = useGetTimer(isRunning);
   const { data: studyTitleData } = useGetStudyTitle(isRunning);
   const studyTitle = studyTitleData?.data?.studyLogs?.[0]?.todayGoal;
   const { mutate: updateTimer } = useUpdateTimer();
-
+  const { mutate: deleteTimer } = useDeleteTimer();
   const handleStart = () => {
     // 조건 확인
     if (timerData) {
+      sessionStartTimeRef.current = { hours, minutes, seconds };
       setIsRunning(true);
     } else {
       setIsGoalModalOpen(true);
@@ -31,24 +42,48 @@ export default function IndexPage() {
 
   // ✅ 모달에서 시작하기를 누르면 → 모달 닫고 타이머 시작
   const handleStartTimer = () => {
+    sessionStartTimeRef.current = { hours, minutes, seconds };
     setIsRunning(true);
     setIsGoalModalOpen(false);
   };
 
   const handlePause = () => {
-    const currentTimeSpent = hours * 3600 + minutes * 60 + seconds;
+    if (!sessionStartTimeRef.current) return;
+
+    // 현재 화면 시간에서 시작 시점 화면 시간을 빼서 계산
+    const startTotalSeconds =
+      sessionStartTimeRef.current.hours * 3600 +
+      sessionStartTimeRef.current.minutes * 60 +
+      sessionStartTimeRef.current.seconds;
+    const currentTotalSeconds = hours * 3600 + minutes * 60 + seconds;
+    const currentTimeSpent = (currentTotalSeconds - startTotalSeconds) * 1000;
+
     console.log('currentTimeSpent', currentTimeSpent);
+
+    // splitTimes 배열에 추가
+    const updatedSplitTimes = [...splitTimes, { timeSpent: currentTimeSpent }];
+    setSplitTimes(updatedSplitTimes);
 
     // 서버에 일시정지 상태 업데이트
     updateTimer({
       timerId: timerData.timerId,
-      timeSpent: currentTimeSpent,
+      splitTimes: updatedSplitTimes,
     });
-
+    sessionStartTimeRef.current = null;
     setIsRunning(false);
   };
 
   const handleFinish = () => {
+    setIsRunning(false);
+    setHours(0);
+    setMinutes(0);
+    setSeconds(0);
+  };
+
+  const handleReset = () => {
+    deleteTimer(timerData.timerId);
+    setSplitTimes([]);
+    sessionStartTimeRef.current = null;
     setIsRunning(false);
     setHours(0);
     setMinutes(0);
@@ -163,6 +198,9 @@ export default function IndexPage() {
             style={{ opacity: isRunning ? 1 : 0.1 }}
           />
         </div>
+        <button onClick={handleReset}>
+          <img src={resetIcon} alt="reset" />
+        </button>
       </div>
     </div>
   );
