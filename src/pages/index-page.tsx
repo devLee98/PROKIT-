@@ -9,10 +9,10 @@ import { useDeleteTimer } from '../hooks/mutation/use-delete-timer';
 import { useUpdateTimer } from '../hooks/mutation/use-update-timer';
 import { useGetStudyTitle } from '../hooks/query/use-get-study-title';
 import { useGetTimer } from '../hooks/query/use-get-timer';
-import { useIsRunningStore } from '../store/is-running-store';
+import { useTimerStore } from '../store/timer-store';
 
 export default function IndexPage() {
-  const { isRunning, setIsRunning } = useIsRunningStore();
+  const { isRunning, setIsRunning } = useTimerStore();
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
   const [splitTimes, setSplitTimes] = useState<
     Array<{ date: string; timeSpent: number }>
@@ -24,16 +24,12 @@ export default function IndexPage() {
     seconds: number;
   } | null>(null);
   const { data: timerData, isError: isTimerError } = useGetTimer(isRunning);
-  const totalTimeSpent = timerData?.data?.splitTimes.reduce(
-    (acc: number, cur: { timeSpent: number }) => acc + cur.timeSpent,
-    0,
-  );
-  const serverHours = Math.floor(totalTimeSpent / 3600000);
-  const serverMinutes = Math.floor(totalTimeSpent / 60000);
-  const serverSeconds = Math.floor((totalTimeSpent % 60000) / 1000);
-  const [hours, setHours] = useState(serverHours || 0);
-  const [minutes, setMinutes] = useState(serverMinutes || 0);
-  const [seconds, setSeconds] = useState(serverSeconds || 0);
+  const localHours = localStorage.getItem('hours');
+  const localMinutes = localStorage.getItem('minutes');
+  const localSeconds = localStorage.getItem('seconds');
+  const [hours, setHours] = useState(Number(localHours) || 0);
+  const [minutes, setMinutes] = useState(Number(localMinutes) || 0);
+  const [seconds, setSeconds] = useState(Number(localSeconds) || 0);
   const { data: studyTitleData } = useGetStudyTitle(isRunning);
   const studyTitle = studyTitleData?.data?.studyLogs?.[0]?.todayGoal;
   const { mutate: updateTimer } = useUpdateTimer();
@@ -76,6 +72,24 @@ export default function IndexPage() {
       ...splitTimes,
       { date, timeSpent: currentTimeSpent },
     ];
+
+    const totalTimeSpent = updatedSplitTimes.reduce(
+      (acc: number, cur: { timeSpent: number }) => acc + cur.timeSpent,
+      0,
+    );
+
+    localStorage.setItem(
+      'hours',
+      Math.floor(totalTimeSpent / 3600000).toString(),
+    );
+    localStorage.setItem(
+      'minutes',
+      Math.floor(totalTimeSpent / 60000).toString(),
+    );
+    localStorage.setItem(
+      'seconds',
+      Math.floor((totalTimeSpent % 60000) / 1000).toString(),
+    );
     setSplitTimes(updatedSplitTimes);
     // 서버에 일시정지 상태 업데이트
     updateTimer({
