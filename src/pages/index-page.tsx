@@ -16,9 +16,9 @@ export default function IndexPage() {
   const [minutes, setMinutes] = useState(0);
   const [seconds, setSeconds] = useState(0);
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
-  const [splitTimes, setSplitTimes] = useState<Array<{ timeSpent: number }>>(
-    [],
-  );
+  const [splitTimes, setSplitTimes] = useState<
+    Array<{ date: string; timeSpent: number }>
+  >([]);
   const intervalRef = useRef<number | null>(null);
   const sessionStartTimeRef = useRef<{
     hours: number;
@@ -60,10 +60,15 @@ export default function IndexPage() {
 
     console.log('currentTimeSpent', currentTimeSpent);
 
-    // splitTimes 배열에 추가
-    const updatedSplitTimes = [...splitTimes, { timeSpent: currentTimeSpent }];
-    setSplitTimes(updatedSplitTimes);
+    // 일시정지 시점의 date 생성
+    const date = new Date().toISOString();
 
+    // splitTimes 배열에 date와 timeSpent 추가
+    const updatedSplitTimes = [
+      ...splitTimes,
+      { date, timeSpent: currentTimeSpent },
+    ];
+    setSplitTimes(updatedSplitTimes);
     // 서버에 일시정지 상태 업데이트
     updateTimer({
       timerId: timerData.timerId,

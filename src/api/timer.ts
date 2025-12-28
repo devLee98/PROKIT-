@@ -26,16 +26,11 @@ export async function updateTimer({
   splitTimes,
 }: {
   timerId: string;
-  splitTimes: Array<{ timeSpent: number }>;
+  splitTimes: Array<{ date: string; timeSpent: number }>;
 }) {
-  // 각 항목에 date 추가
-  const splitTimesWithDate = splitTimes.map((item) => ({
-    date: new Date().toISOString(), //UTC 시간
-    timeSpent: item.timeSpent,
-  }));
-
+  // date가 이미 포함되어 있으므로 그대로 전송
   const response = await axiosInstance.put(`/api/timers/${timerId}`, {
-    splitTimes: splitTimesWithDate,
+    splitTimes,
   });
 
   return response.data;
