@@ -9,12 +9,10 @@ import { useDeleteTimer } from '../hooks/mutation/use-delete-timer';
 import { useUpdateTimer } from '../hooks/mutation/use-update-timer';
 import { useGetStudyTitle } from '../hooks/query/use-get-study-title';
 import { useGetTimer } from '../hooks/query/use-get-timer';
+import { useIsRunningStore } from '../store/is-running-store';
 
 export default function IndexPage() {
-  const [isRunning, setIsRunning] = useState(false);
-  const [hours, setHours] = useState(0);
-  const [minutes, setMinutes] = useState(0);
-  const [seconds, setSeconds] = useState(0);
+  const { isRunning, setIsRunning } = useIsRunningStore();
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
   const [splitTimes, setSplitTimes] = useState<
     Array<{ date: string; timeSpent: number }>
@@ -26,6 +24,16 @@ export default function IndexPage() {
     seconds: number;
   } | null>(null);
   const { data: timerData, isError: isTimerError } = useGetTimer(isRunning);
+  const totalTimeSpent = timerData?.data?.splitTimes.reduce(
+    (acc: number, cur: { timeSpent: number }) => acc + cur.timeSpent,
+    0,
+  );
+  const serverHours = Math.floor(totalTimeSpent / 3600000);
+  const serverMinutes = Math.floor(totalTimeSpent / 60000);
+  const serverSeconds = Math.floor((totalTimeSpent % 60000) / 1000);
+  const [hours, setHours] = useState(serverHours || 0);
+  const [minutes, setMinutes] = useState(serverMinutes || 0);
+  const [seconds, setSeconds] = useState(serverSeconds || 0);
   const { data: studyTitleData } = useGetStudyTitle(isRunning);
   const studyTitle = studyTitleData?.data?.studyLogs?.[0]?.todayGoal;
   const { mutate: updateTimer } = useUpdateTimer();
