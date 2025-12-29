@@ -1,22 +1,27 @@
 import finish from '../../assets/finish.svg';
+import listIcon from '../../assets/list.svg';
 import pause from '../../assets/pause.svg';
 import resetIcon from '../../assets/reset.svg';
 import start from '../../assets/start.svg';
 
 interface TimerControlsProps {
   isRunning: boolean;
+  hasStarted: boolean;
   onStart: () => void;
   onPause: () => void;
   onFinish: () => void;
   onReset: () => void;
+  onEdit: () => void;
 }
 
 export function TimerControls({
   isRunning,
+  hasStarted,
   onStart,
   onPause,
   onFinish,
   onReset,
+  onEdit,
 }: TimerControlsProps) {
   return (
     <div>
@@ -25,9 +30,16 @@ export function TimerControls({
         <ControlButton icon={pause} disabled={!isRunning} onClick={onPause} />
         <ControlButton icon={finish} disabled={!isRunning} onClick={onFinish} />
       </div>
-      <button onClick={onReset}>
-        <img src={resetIcon} alt="reset" />
-      </button>
+      {hasStarted && (
+        <>
+          <button onClick={onEdit}>
+            <img src={listIcon} alt="list" />
+          </button>
+          <button onClick={onReset}>
+            <img src={resetIcon} alt="reset" />
+          </button>
+        </>
+      )}
     </div>
   );
 }

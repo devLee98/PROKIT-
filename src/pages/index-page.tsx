@@ -1,17 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
+import { EditGoalModal } from '../components/modal/edit-goal-modal';
 import GoalModal from '../components/modal/goal-model';
 import { TimerControls } from '../components/timer/timer-controls';
 import { TimerDisplay } from '../components/timer/timer-display';
 import { useDeleteTimer } from '../hooks/mutation/use-delete-timer';
 import { useUpdateTimer } from '../hooks/mutation/use-update-timer';
-import { useGetStudyTitle } from '../hooks/query/use-get-study-title';
+import { useGetStudyLogs } from '../hooks/query/use-get-study-logs';
 import { useGetTimer } from '../hooks/query/use-get-timer';
 import { useTimer } from '../hooks/use-timer';
 import { useTimerStore } from '../store/timer-store';
 
 export default function IndexPage() {
   const { isRunning, setIsRunning } = useTimerStore();
+  const [hasStarted, setHasStarted] = useState(false);
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
+  const [isEditGoalModalOpen, setIsEditGoalModalOpen] = useState(false);
   const [timerId, setTimerId] = useState<string | null>(null);
   const [splitTimes, setSplitTimes] = useState<
     Array<{ date: string; timeSpent: number }>
@@ -22,9 +25,10 @@ export default function IndexPage() {
     seconds: number;
   } | null>(null);
 
-  const { data: timerData, isError: isTimerError } = useGetTimer();
-  const { data: studyTitleData } = useGetStudyTitle(isRunning);
-  const studyTitle = studyTitleData?.data?.studyLogs?.[0]?.todayGoal;
+  const { data: timerData, isError: isTimerError } = useGetTimer(hasStarted);
+  const studyLogId = timerData?.studyLogId;
+  const { data: studyLogsData } = useGetStudyLogs(isRunning);
+  const studyTitle = studyLogsData?.data?.studyLogs?.[0]?.todayGoal;
   const { mutate: updateTimer } = useUpdateTimer();
   const { mutate: deleteTimer } = useDeleteTimer();
   const { hours, minutes, seconds, start, stop, reset, setTime } = useTimer();
@@ -33,6 +37,7 @@ export default function IndexPage() {
       sessionStartTimeRef.current = { hours, minutes, seconds };
       setIsRunning(true);
       start();
+      setHasStarted(true);
     } else {
       setIsGoalModalOpen(true);
     }
@@ -44,6 +49,7 @@ export default function IndexPage() {
     setIsGoalModalOpen(false);
     setTimerId(timerId);
     start();
+    setHasStarted(true);
   };
 
   const handlePause = () => {
@@ -93,7 +99,10 @@ export default function IndexPage() {
     sessionStartTimeRef.current = null;
     setIsRunning(false);
     reset();
+    setHasStarted(false);
   };
+
+  const handleSave = () => {};
 
   useEffect(() => {
     if (isTimerError) {
@@ -131,7 +140,13 @@ export default function IndexPage() {
         onClose={() => setIsGoalModalOpen(false)}
         onStartTimer={handleStartTimer}
       />
-
+      <EditGoalModal
+        isOpen={isEditGoalModalOpen}
+        onClose={() => setIsEditGoalModalOpen(false)}
+        onSave={handleSave}
+        studyLogId={studyLogId}
+        isRunning={isRunning}
+      />
       <h1 className="text-center text-[72px] font-bold text-[#4c79ff]/30 select-none">
         {isRunning ? studyTitle : '오늘도 열심히 달려봐요!'}
       </h1>
@@ -140,10 +155,12 @@ export default function IndexPage() {
 
       <TimerControls
         isRunning={isRunning}
+        hasStarted={hasStarted}
         onStart={handleStart}
         onPause={handlePause}
         onFinish={handleFinish}
         onReset={handleReset}
+        onEdit={() => setIsEditGoalModalOpen(true)}
       />
     </div>
   );
