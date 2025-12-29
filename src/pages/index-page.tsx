@@ -12,10 +12,13 @@ import { useTimerStore } from '../store/timer-store';
 
 export default function IndexPage() {
   const { isRunning, setIsRunning } = useTimerStore();
-  const [hasStarted, setHasStarted] = useState(false);
+  //lazy initialization(먼저 localStorage에서 가져오고 없으면 false로 초기화)
+  const [hasStarted, setHasStarted] = useState(() => {
+    const savedHasStarted = localStorage.getItem('hasStarted');
+    return savedHasStarted === 'true';
+  });
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
   const [isEditGoalModalOpen, setIsEditGoalModalOpen] = useState(false);
-  const [timerId, setTimerId] = useState<string | null>(null);
   const [splitTimes, setSplitTimes] = useState<
     Array<{ date: string; timeSpent: number }>
   >([]);
@@ -25,7 +28,11 @@ export default function IndexPage() {
     seconds: number;
   } | null>(null);
 
-  const { data: timerData, isError: isTimerError } = useGetTimer(hasStarted);
+  const {
+    data: timerData,
+    isError: isTimerError,
+    isFetched,
+  } = useGetTimer(hasStarted);
   const studyLogId = timerData?.studyLogId;
   const { data: studyLogsData } = useGetStudyLogs(isRunning);
   const studyTitle = studyLogsData?.data?.studyLogs?.[0]?.todayGoal;
@@ -43,11 +50,11 @@ export default function IndexPage() {
     }
   };
 
-  const handleStartTimer = (timerId: string) => {
+  const handleStartTimer = () => {
     sessionStartTimeRef.current = { hours, minutes, seconds };
     setIsRunning(true);
     setIsGoalModalOpen(false);
-    setTimerId(timerId);
+    // setTimerId(timerId);
     start();
     setHasStarted(true);
   };
@@ -55,7 +62,7 @@ export default function IndexPage() {
   const handlePause = () => {
     if (!sessionStartTimeRef.current) return;
 
-    const currentTimerId = timerId || timerData?.timerId;
+    const currentTimerId = timerData?.timerId;
     if (!currentTimerId) return;
 
     const startTotalSeconds =
@@ -78,12 +85,6 @@ export default function IndexPage() {
 
     setSplitTimes(updatedSplitTimes);
 
-    const totalTimeSpent = updatedSplitTimes.reduce(
-      (acc: number, cur: { timeSpent: number }) => acc + cur.timeSpent,
-      0,
-    );
-    localStorage.setItem('totalTimeSpent', totalTimeSpent.toString());
-
     // 서버에 일시정지 상태 업데이트
     updateTimer({
       timerId: currentTimerId,
@@ -94,19 +95,46 @@ export default function IndexPage() {
     stop();
   };
 
-  // 새로고침 시 로컬스토리지에서 복원하는 useEffect 추가
-  useEffect(() => {
-    const savedTotalTimeSpent = localStorage.getItem('totalTimeSpent');
+  // 이 방법은 hasStarted가 false에서 화면이 그려진 후 useEffect가 실행되서 true로 바뀌기 때문에 깜빡임이 발생한다
+  // useEffect(() => {
+  //   const savedHasStarted = localStorage.getItem('hasStarted');
+  //   if (savedHasStarted === 'true') {
+  //     setHasStarted(true);
+  //   }
+  // }, []);
 
-    if (savedTotalTimeSpent) {
-      const totalTimeSpent = parseInt(savedTotalTimeSpent, 10);
+  // 2. hasStarted가 변경될 때마다 로컬스토리지에 저장
+  useEffect(() => {
+    localStorage.setItem('hasStarted', hasStarted.toString());
+  }, [hasStarted]);
+
+  useEffect(() => {
+    if (isRunning) return; // 실행 중이면 복원하지 않음
+
+    if (!isFetched) return;
+
+    if (timerData?.splitTimes && timerData.splitTimes.length > 0) {
+      // splitTimes 복원
+      setSplitTimes(timerData.splitTimes);
+
+      // totalTimeSpent 계산해서 시간 복원
+      const totalTimeSpent = timerData.splitTimes.reduce(
+        (acc: number, cur: { timeSpent: number }) => acc + cur.timeSpent,
+        0,
+      );
+
       const calculatedHours = Math.floor(totalTimeSpent / 3600000);
       const calculatedMinutes = Math.floor((totalTimeSpent % 3600000) / 60000);
       const calculatedSeconds = Math.floor((totalTimeSpent % 60000) / 1000);
 
       setTime(calculatedHours, calculatedMinutes, calculatedSeconds);
+    } else if (!timerData) {
+      // timerData가 null이면 초기화
+      setTime(0, 0, 0);
+      setSplitTimes([]);
+      setHasStarted(false);
     }
-  }, []); // 마운트 시 한 번만 실행
+  }, [timerData, isRunning, isFetched]);
 
   const handleFinish = () => {
     setIsRunning(false);
@@ -115,7 +143,8 @@ export default function IndexPage() {
 
   const handleReset = () => {
     deleteTimer(timerData.timerId);
-    localStorage.removeItem('totalTimeSpent');
+
+    localStorage.removeItem('hasStarted');
     setSplitTimes([]);
     sessionStartTimeRef.current = null;
     setIsRunning(false);
