@@ -7,7 +7,7 @@ import { usePostTimer } from '../../hooks/mutation/use-post-timer';
 interface GoalModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onStartTimer: (timerId: string) => void;
+  onStartTimer: () => void;
 }
 
 interface FormSchema {
@@ -41,9 +41,9 @@ export default function GoalModal({
   const { mutate: postTimer } = usePostTimer();
   const onSubmit = (data: FormSchema) => {
     postTimer(data, {
-      onSuccess: (response) => {
+      onSuccess: () => {
         setInputValue('');
-        onStartTimer(response.timerId);
+        onStartTimer();
       },
     });
   };
