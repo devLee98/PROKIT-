@@ -14,6 +14,7 @@ import { useTimerStore } from '../store/timer-store';
 export default function IndexPage() {
   const { isRunning, setIsRunning } = useTimerStore();
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
+  const [timerId, setTimerId] = useState<string | null>(null);
   const [splitTimes, setSplitTimes] = useState<
     Array<{ date: string; timeSpent: number }>
   >([]);
@@ -23,13 +24,17 @@ export default function IndexPage() {
     minutes: number;
     seconds: number;
   } | null>(null);
-  const { data: timerData, isError: isTimerError } = useGetTimer(isRunning);
-  const localHours = localStorage.getItem('hours');
-  const localMinutes = localStorage.getItem('minutes');
-  const localSeconds = localStorage.getItem('seconds');
-  const [hours, setHours] = useState(Number(localHours) || 0);
-  const [minutes, setMinutes] = useState(Number(localMinutes) || 0);
-  const [seconds, setSeconds] = useState(Number(localSeconds) || 0);
+  const { data: timerData, isError: isTimerError } = useGetTimer();
+  // const totalTimeSpent = timerData?.splitTimes.reduce(
+  //   (acc: number, cur: { timeSpent: number }) => acc + cur.timeSpent,
+  //   0,
+  // );
+  // const serverHours = Math.floor(totalTimeSpent / 3600000);
+  // const serverMinutes = Math.floor(totalTimeSpent / 60000);
+  // const serverSeconds = Math.floor((totalTimeSpent % 60000) / 1000);
+  const [hours, setHours] = useState(0);
+  const [minutes, setMinutes] = useState(0);
+  const [seconds, setSeconds] = useState(0);
   const { data: studyTitleData } = useGetStudyTitle(isRunning);
   const studyTitle = studyTitleData?.data?.studyLogs?.[0]?.todayGoal;
   const { mutate: updateTimer } = useUpdateTimer();
@@ -45,14 +50,19 @@ export default function IndexPage() {
   };
 
   // ✅ 모달에서 시작하기를 누르면 → 모달 닫고 타이머 시작
-  const handleStartTimer = () => {
+  const handleStartTimer = (timerId: string) => {
     sessionStartTimeRef.current = { hours, minutes, seconds };
     setIsRunning(true);
     setIsGoalModalOpen(false);
+    setTimerId(timerId);
   };
 
   const handlePause = () => {
     if (!sessionStartTimeRef.current) return;
+
+    // timerId가 없으면 timerData에서 가져오기 (기존 타이머 재개 시)
+    const currentTimerId = timerId || timerData?.timerId;
+    if (!currentTimerId) return;
 
     // 현재 화면 시간에서 시작 시점 화면 시간을 빼서 계산
     const startTotalSeconds =
@@ -73,27 +83,11 @@ export default function IndexPage() {
       { date, timeSpent: currentTimeSpent },
     ];
 
-    const totalTimeSpent = updatedSplitTimes.reduce(
-      (acc: number, cur: { timeSpent: number }) => acc + cur.timeSpent,
-      0,
-    );
-
-    localStorage.setItem(
-      'hours',
-      Math.floor(totalTimeSpent / 3600000).toString(),
-    );
-    localStorage.setItem(
-      'minutes',
-      Math.floor(totalTimeSpent / 60000).toString(),
-    );
-    localStorage.setItem(
-      'seconds',
-      Math.floor((totalTimeSpent % 60000) / 1000).toString(),
-    );
     setSplitTimes(updatedSplitTimes);
     // 서버에 일시정지 상태 업데이트
+
     updateTimer({
-      timerId: timerData.timerId,
+      timerId: currentTimerId,
       splitTimes: updatedSplitTimes,
     });
     sessionStartTimeRef.current = null;
@@ -148,6 +142,29 @@ export default function IndexPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isTimerError]);
+
+  useEffect(() => {
+    if (timerData?.splitTimes) {
+      // splitTimes 상태 초기화
+      setSplitTimes(timerData.splitTimes);
+
+      // splitTimes의 합으로 총 시간 계산
+      const totalTimeSpent = timerData.splitTimes.reduce(
+        (acc: number, cur: { timeSpent: number }) => acc + cur.timeSpent,
+        0,
+      );
+
+      // 시간, 분, 초 계산
+      const calculatedHours = Math.floor(totalTimeSpent / 3600000);
+      const calculatedMinutes = Math.floor((totalTimeSpent % 3600000) / 60000);
+      const calculatedSeconds = Math.floor((totalTimeSpent % 60000) / 1000);
+
+      // 상태 업데이트
+      setHours(calculatedHours);
+      setMinutes(calculatedMinutes);
+      setSeconds(calculatedSeconds);
+    }
+  }, [timerData]);
 
   const formatTime = (time: number) => String(time).padStart(2, '0');
 

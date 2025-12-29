@@ -6,5 +6,7 @@ export function useGetTimer(isRunning: boolean) {
     queryKey: ['timer'],
     queryFn: getTimer,
     enabled: isRunning,
+    staleTime: 0,
+    refetchOnMount: true,
   });
 }
