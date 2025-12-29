@@ -42,6 +42,7 @@ export default function GoalModal({
   const onSubmit = (data: FormSchema) => {
     postTimer(data, {
       onSuccess: (response) => {
+        setInputValue('');
         onStartTimer(response.timerId);
       },
     });
