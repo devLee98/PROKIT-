@@ -6,6 +6,7 @@ import { useDeleteTimer } from '../hooks/mutation/use-delete-timer';
 import { useUpdateTimer } from '../hooks/mutation/use-update-timer';
 import { useGetStudyTitle } from '../hooks/query/use-get-study-title';
 import { useGetTimer } from '../hooks/query/use-get-timer';
+import { useTimer } from '../hooks/use-timer';
 import { useTimerStore } from '../store/timer-store';
 
 export default function IndexPage() {
@@ -15,47 +16,42 @@ export default function IndexPage() {
   const [splitTimes, setSplitTimes] = useState<
     Array<{ date: string; timeSpent: number }>
   >([]);
-  const intervalRef = useRef<number | null>(null);
-
   const sessionStartTimeRef = useRef<{
     hours: number;
     minutes: number;
     seconds: number;
   } | null>(null);
+
   const { data: timerData, isError: isTimerError } = useGetTimer();
-  const [hours, setHours] = useState(0);
-  const [minutes, setMinutes] = useState(0);
-  const [seconds, setSeconds] = useState(0);
   const { data: studyTitleData } = useGetStudyTitle(isRunning);
   const studyTitle = studyTitleData?.data?.studyLogs?.[0]?.todayGoal;
   const { mutate: updateTimer } = useUpdateTimer();
   const { mutate: deleteTimer } = useDeleteTimer();
+  const { hours, minutes, seconds, start, stop, reset, setTime } = useTimer();
   const handleStart = () => {
-    // 조건 확인
     if (timerData) {
       sessionStartTimeRef.current = { hours, minutes, seconds };
       setIsRunning(true);
+      start();
     } else {
       setIsGoalModalOpen(true);
     }
   };
 
-  // ✅ 모달에서 시작하기를 누르면 → 모달 닫고 타이머 시작
   const handleStartTimer = (timerId: string) => {
     sessionStartTimeRef.current = { hours, minutes, seconds };
     setIsRunning(true);
     setIsGoalModalOpen(false);
     setTimerId(timerId);
+    start();
   };
 
   const handlePause = () => {
     if (!sessionStartTimeRef.current) return;
 
-    // timerId가 없으면 timerData에서 가져오기 (기존 타이머 재개 시)
     const currentTimerId = timerId || timerData?.timerId;
     if (!currentTimerId) return;
 
-    // 현재 화면 시간에서 시작 시점 화면 시간을 빼서 계산
     const startTotalSeconds =
       sessionStartTimeRef.current.hours * 3600 +
       sessionStartTimeRef.current.minutes * 60 +
@@ -83,13 +79,12 @@ export default function IndexPage() {
     });
     sessionStartTimeRef.current = null;
     setIsRunning(false);
+    stop();
   };
 
   const handleFinish = () => {
     setIsRunning(false);
-    setHours(0);
-    setMinutes(0);
-    setSeconds(0);
+    reset();
   };
 
   const handleReset = () => {
@@ -97,51 +92,13 @@ export default function IndexPage() {
     setSplitTimes([]);
     sessionStartTimeRef.current = null;
     setIsRunning(false);
-    setHours(0);
-    setMinutes(0);
-    setSeconds(0);
+    reset();
   };
-
-  useEffect(() => {
-    if (!isRunning) {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-      return;
-    }
-
-    // 타이머 카운트 interval
-    intervalRef.current = setInterval(() => {
-      setSeconds((prev) => {
-        if (prev === 59) {
-          setMinutes((min) => {
-            if (min === 59) {
-              setHours((h) => h + 1);
-              return 0;
-            }
-            return min + 1;
-          });
-          return 0;
-        }
-        return prev + 1;
-      });
-    }, 1000);
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-    };
-  }, [isRunning]);
 
   useEffect(() => {
     if (isTimerError) {
       setIsRunning(false);
-      setHours(0);
-      setMinutes(0);
-      setSeconds(0);
+      reset();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isTimerError]);
@@ -163,12 +120,9 @@ export default function IndexPage() {
       const calculatedMinutes = Math.floor((totalTimeSpent % 3600000) / 60000);
       const calculatedSeconds = Math.floor((totalTimeSpent % 60000) / 1000);
 
-      // 상태 업데이트
-      setHours(calculatedHours);
-      setMinutes(calculatedMinutes);
-      setSeconds(calculatedSeconds);
+      setTime(calculatedHours, calculatedMinutes, calculatedSeconds);
     }
-  }, [timerData, isRunning]);
+  }, [timerData, isRunning, setTime]);
 
   return (
     <div className="container mx-auto mt-24 flex min-h-screen flex-col items-center justify-center gap-20">
