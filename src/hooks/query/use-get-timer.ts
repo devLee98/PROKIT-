@@ -1,10 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { getTimer } from '../../api/timer';
 
-export function useGetTimer(isRunning: boolean) {
+export function useGetTimer() {
   return useQuery({
     queryKey: ['timer'],
     queryFn: getTimer,
-    enabled: isRunning,
+    staleTime: Infinity,
+    refetchOnMount: true,
   });
 }
