@@ -78,6 +78,12 @@ export default function IndexPage() {
 
     setSplitTimes(updatedSplitTimes);
 
+    const totalTimeSpent = updatedSplitTimes.reduce(
+      (acc: number, cur: { timeSpent: number }) => acc + cur.timeSpent,
+      0,
+    );
+    localStorage.setItem('totalTimeSpent', totalTimeSpent.toString());
+
     // 서버에 일시정지 상태 업데이트
     updateTimer({
       timerId: currentTimerId,
@@ -88,6 +94,20 @@ export default function IndexPage() {
     stop();
   };
 
+  // 새로고침 시 로컬스토리지에서 복원하는 useEffect 추가
+  useEffect(() => {
+    const savedTotalTimeSpent = localStorage.getItem('totalTimeSpent');
+
+    if (savedTotalTimeSpent) {
+      const totalTimeSpent = parseInt(savedTotalTimeSpent, 10);
+      const calculatedHours = Math.floor(totalTimeSpent / 3600000);
+      const calculatedMinutes = Math.floor((totalTimeSpent % 3600000) / 60000);
+      const calculatedSeconds = Math.floor((totalTimeSpent % 60000) / 1000);
+
+      setTime(calculatedHours, calculatedMinutes, calculatedSeconds);
+    }
+  }, []); // 마운트 시 한 번만 실행
+
   const handleFinish = () => {
     setIsRunning(false);
     reset();
@@ -95,6 +115,7 @@ export default function IndexPage() {
 
   const handleReset = () => {
     deleteTimer(timerData.timerId);
+    localStorage.removeItem('totalTimeSpent');
     setSplitTimes([]);
     sessionStartTimeRef.current = null;
     setIsRunning(false);
@@ -111,27 +132,6 @@ export default function IndexPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isTimerError]);
-
-  useEffect(() => {
-    if (isRunning) return;
-    if (timerData?.splitTimes) {
-      // splitTimes 상태 초기화
-      setSplitTimes(timerData.splitTimes);
-
-      // splitTimes의 합으로 총 시간 계산
-      const totalTimeSpent = timerData.splitTimes.reduce(
-        (acc: number, cur: { timeSpent: number }) => acc + cur.timeSpent,
-        0,
-      );
-
-      // 시간, 분, 초 계산
-      const calculatedHours = Math.floor(totalTimeSpent / 3600000);
-      const calculatedMinutes = Math.floor((totalTimeSpent % 3600000) / 60000);
-      const calculatedSeconds = Math.floor((totalTimeSpent % 60000) / 1000);
-
-      setTime(calculatedHours, calculatedMinutes, calculatedSeconds);
-    }
-  }, [timerData, isRunning, setTime]);
 
   return (
     <div className="container mx-auto mt-24 flex min-h-screen flex-col items-center justify-center gap-20">
