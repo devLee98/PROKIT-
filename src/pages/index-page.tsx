@@ -19,19 +19,13 @@ export default function IndexPage() {
     Array<{ date: string; timeSpent: number }>
   >([]);
   const intervalRef = useRef<number | null>(null);
+
   const sessionStartTimeRef = useRef<{
     hours: number;
     minutes: number;
     seconds: number;
   } | null>(null);
   const { data: timerData, isError: isTimerError } = useGetTimer();
-  // const totalTimeSpent = timerData?.splitTimes.reduce(
-  //   (acc: number, cur: { timeSpent: number }) => acc + cur.timeSpent,
-  //   0,
-  // );
-  // const serverHours = Math.floor(totalTimeSpent / 3600000);
-  // const serverMinutes = Math.floor(totalTimeSpent / 60000);
-  // const serverSeconds = Math.floor((totalTimeSpent % 60000) / 1000);
   const [hours, setHours] = useState(0);
   const [minutes, setMinutes] = useState(0);
   const [seconds, setSeconds] = useState(0);
@@ -84,8 +78,8 @@ export default function IndexPage() {
     ];
 
     setSplitTimes(updatedSplitTimes);
-    // 서버에 일시정지 상태 업데이트
 
+    // 서버에 일시정지 상태 업데이트
     updateTimer({
       timerId: currentTimerId,
       splitTimes: updatedSplitTimes,
@@ -112,8 +106,15 @@ export default function IndexPage() {
   };
 
   useEffect(() => {
-    if (!isRunning) return;
+    if (!isRunning) {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      return;
+    }
 
+    // 타이머 카운트 interval
     intervalRef.current = setInterval(() => {
       setSeconds((prev) => {
         if (prev === 59) {
@@ -130,7 +131,12 @@ export default function IndexPage() {
       });
     }, 1000);
 
-    return () => clearInterval(intervalRef.current as number);
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
   }, [isRunning]);
 
   useEffect(() => {
@@ -144,6 +150,7 @@ export default function IndexPage() {
   }, [isTimerError]);
 
   useEffect(() => {
+    if (isRunning) return;
     if (timerData?.splitTimes) {
       // splitTimes 상태 초기화
       setSplitTimes(timerData.splitTimes);
@@ -164,7 +171,7 @@ export default function IndexPage() {
       setMinutes(calculatedMinutes);
       setSeconds(calculatedSeconds);
     }
-  }, [timerData]);
+  }, [timerData, isRunning]);
 
   const formatTime = (time: number) => String(time).padStart(2, '0');
 

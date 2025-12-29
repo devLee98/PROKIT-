@@ -7,7 +7,7 @@ import { usePostTimer } from '../../hooks/mutation/use-post-timer';
 interface GoalModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onStartTimer: (timerId: string) => void; // ← 단순히 "시작했다"는 신호만
+  onStartTimer: (timerId: string) => void;
 }
 
 interface FormSchema {
@@ -42,7 +42,7 @@ export default function GoalModal({
   const onSubmit = (data: FormSchema) => {
     postTimer(data, {
       onSuccess: (response) => {
-        onStartTimer(response.timerId); // ✅ postTimer 성공 후 실행
+        onStartTimer(response.timerId);
       },
     });
   };
