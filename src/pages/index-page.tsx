@@ -111,6 +111,8 @@ export default function IndexPage() {
   useEffect(() => {
     if (isRunning) return; // 실행 중이면 복원하지 않음
 
+    if (!hasStarted) return;
+
     if (!isFetched) return;
 
     if (timerData?.splitTimes && timerData.splitTimes.length > 0) {
@@ -142,14 +144,13 @@ export default function IndexPage() {
   };
 
   const handleReset = () => {
+    reset();
+    setHasStarted(false);
     deleteTimer(timerData.timerId);
-
     localStorage.removeItem('hasStarted');
     setSplitTimes([]);
     sessionStartTimeRef.current = null;
     setIsRunning(false);
-    reset();
-    setHasStarted(false);
   };
 
   const handleSave = () => {};

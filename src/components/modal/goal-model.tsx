@@ -22,14 +22,16 @@ export default function GoalModal({
 }: GoalModalProps) {
   const [inputValue, setInputValue] = useState('');
 
-  const { register, handleSubmit, watch, setValue } = useForm<FormSchema>({
-    defaultValues: {
-      todayGoal: '',
-      tasks: [],
-    },
-  });
+  const { register, handleSubmit, watch, setValue, reset } =
+    useForm<FormSchema>({
+      defaultValues: {
+        todayGoal: '',
+        tasks: [],
+      },
+    });
 
   const tasks = watch('tasks');
+
   const handleAddGoal = () => {
     if (inputValue.trim()) {
       //이문법 뭐지?
@@ -42,8 +44,8 @@ export default function GoalModal({
   const onSubmit = (data: FormSchema) => {
     postTimer(data, {
       onSuccess: () => {
-        setInputValue('');
         onStartTimer();
+        reset();
       },
     });
   };
@@ -56,8 +58,7 @@ export default function GoalModal({
   };
 
   const handleCancel = () => {
-    setValue('tasks', []);
-    setInputValue('');
+    reset();
     onClose();
   };
 
