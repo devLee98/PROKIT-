@@ -153,8 +153,6 @@ export default function IndexPage() {
     setIsRunning(false);
   };
 
-  const handleSave = () => {};
-
   useEffect(() => {
     if (isTimerError) {
       setIsRunning(false);
@@ -173,9 +171,8 @@ export default function IndexPage() {
       <EditGoalModal
         isOpen={isEditGoalModalOpen}
         onClose={() => setIsEditGoalModalOpen(false)}
-        onSave={handleSave}
         studyLogId={studyLogId}
-        isRunning={isRunning}
+        hasStarted={hasStarted}
       />
       <h1 className="text-center text-[72px] font-bold text-[#4c79ff]/30 select-none">
         {isRunning ? studyTitle : '오늘도 열심히 달려봐요!'}
