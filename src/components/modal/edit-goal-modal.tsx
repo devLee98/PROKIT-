@@ -1,13 +1,15 @@
+import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import editIcon from '../../assets/edit.svg';
+import { useUpdateStudyLog } from '../../hooks/mutation/use-update-study-log';
 import { useGetDetailStudyLog } from '../../hooks/query/use-get-detail-study-log';
+import EditCard from '../edit-card';
 
 interface EditGoalModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: () => void;
-  studyLogId: string | undefined;
-  isRunning: boolean;
+  studyLogId: string;
+  hasStarted: boolean;
 }
 
 interface Task {
@@ -19,15 +21,47 @@ interface Task {
 export function EditGoalModal({
   isOpen,
   onClose,
-  onSave,
   studyLogId,
-  isRunning,
+  hasStarted,
 }: EditGoalModalProps) {
   const { data: detailStudyLogData } = useGetDetailStudyLog(
     studyLogId,
-    isRunning,
+    hasStarted,
   );
+
+  // //lazy initializer
+  // const [tasks, setTasks] = useState<Task[]>(
+  //   () => detailStudyLogData?.data?.tasks ?? [],
+  // );
+
+  const [tasks, setTasks] = useState<Task[]>([]);
+
+  useEffect(() => {
+    if (isOpen && detailStudyLogData?.data?.tasks) {
+      setTasks(detailStudyLogData.data.tasks);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }
+  }, [isOpen, detailStudyLogData]);
+
+  const { mutate: updateStudyLog } = useUpdateStudyLog(studyLogId, tasks);
+
   const handleAddGoal = () => {};
+  const handleToggleTask = (id: string, isCompleted: boolean) => {
+    setTasks((prevTasks) =>
+      prevTasks.map((task) =>
+        task.id === id ? { ...task, isCompleted } : task,
+      ),
+    );
+  };
+  const handleSave = () => {
+    updateStudyLog();
+    onClose();
+  };
+
+  const handleCancel = () => {
+    onClose();
+  };
+
   if (!isOpen) return null;
   return createPortal(
     <div
@@ -60,12 +94,35 @@ export function EditGoalModal({
                   <img src={editIcon} alt="edit" />
                 </button>
               </div>
-              {detailStudyLogData?.data?.tasks?.map((goal: Task) => (
-                <div key={goal.id}>
-                  <p>{goal.content}</p>
-                </div>
-              ))}
+              <div className="mt-6 flex flex-col gap-3">
+                {tasks?.map((goal: Task) => (
+                  <EditCard
+                    key={goal.id}
+                    name={goal.content}
+                    isCompleted={goal.isCompleted}
+                    onToggle={(isCompleted) =>
+                      handleToggleTask(goal.id, isCompleted)
+                    }
+                  />
+                ))}
+              </div>
             </div>
+          </div>
+        </div>
+        <div className="mt-9 flex items-end justify-end">
+          <div className="flex h-[48px] gap-4">
+            <button
+              onClick={handleCancel}
+              className="w-[64px] bg-[#e5e7eb] px-4 py-3"
+            >
+              취소
+            </button>
+            <button
+              onClick={handleSave}
+              className="w-[100px] bg-[#e5e7eb] px-4 py-3"
+            >
+              저장하기
+            </button>
           </div>
         </div>
       </div>

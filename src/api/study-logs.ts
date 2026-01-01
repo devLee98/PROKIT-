@@ -16,3 +16,16 @@ export async function getDetailStudyLog(studyLogId: string) {
   const response = await axiosInstance.get(`/api/study-logs/${studyLogId}`);
   return response.data;
 }
+
+export async function updateStudyLog({
+  studyLogId,
+  tasks,
+}: {
+  studyLogId: string;
+  tasks: { content: string; isCompleted: boolean }[];
+}) {
+  const response = await axiosInstance.put(`/api/${studyLogId}/tasks`, {
+    tasks,
+  });
+  return response.data;
+}
