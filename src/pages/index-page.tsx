@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { EditGoalModal } from '../components/modal/edit-goal-modal';
 import GoalModal from '../components/modal/goal-model';
+import FinishGoalModal from '../components/modal/stop-goal-modal';
 import { TimerControls } from '../components/timer/timer-controls';
 import { TimerDisplay } from '../components/timer/timer-display';
 import { useDeleteTimer } from '../hooks/mutation/use-delete-timer';
 import { useUpdateTimer } from '../hooks/mutation/use-update-timer';
-import { useGetStudyLogs } from '../hooks/query/use-get-study-logs';
+import { useGetDetailStudyLog } from '../hooks/query/use-get-detail-study-log';
 import { useGetTimer } from '../hooks/query/use-get-timer';
 import { useTimer } from '../hooks/use-timer';
 import { useTimerStore } from '../store/timer-store';
@@ -19,6 +20,7 @@ export default function IndexPage() {
   });
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
   const [isEditGoalModalOpen, setIsEditGoalModalOpen] = useState(false);
+  const [isStopGoalModalOpen, setIsStopGoalModalOpen] = useState(false);
   const [splitTimes, setSplitTimes] = useState<
     Array<{ date: string; timeSpent: number }>
   >([]);
@@ -34,10 +36,17 @@ export default function IndexPage() {
     isFetched,
   } = useGetTimer(hasStarted);
   const studyLogId = timerData?.studyLogId;
-  const { data: studyLogsData } = useGetStudyLogs(isRunning);
-  const studyTitle = studyLogsData?.data?.studyLogs?.[0]?.todayGoal;
+  const timerId = timerData?.timerId;
+
+  // const { data: studyLogsData } = useGetStudyLogs(isRunning);
+  // const studyTitle = studyLogsData?.data?.studyLogs?.[0]?.todayGoal;
+  const { data: detailStudyLogData } = useGetDetailStudyLog(
+    studyLogId,
+    hasStarted,
+  );
+  const studyTitle = detailStudyLogData?.data?.todayGoal;
   const { mutate: updateTimer } = useUpdateTimer();
-  const { mutate: deleteTimer } = useDeleteTimer();
+  const { mutate: deleteTimer } = useDeleteTimer(studyLogId);
   const { hours, minutes, seconds, start, stop, reset, setTime } = useTimer();
   const handleStart = () => {
     if (timerData) {
@@ -138,11 +147,6 @@ export default function IndexPage() {
     }
   }, [timerData, isRunning, isFetched]);
 
-  const handleFinish = () => {
-    setIsRunning(false);
-    reset();
-  };
-
   const handleReset = () => {
     reset();
     setHasStarted(false);
@@ -151,6 +155,20 @@ export default function IndexPage() {
     setSplitTimes([]);
     sessionStartTimeRef.current = null;
     setIsRunning(false);
+  };
+
+  const handleStop = () => {
+    setIsStopGoalModalOpen(true);
+  };
+
+  const handleStopComplete = () => {
+    reset();
+    setHasStarted(false);
+    localStorage.removeItem('hasStarted');
+    setSplitTimes([]);
+    sessionStartTimeRef.current = null;
+    setIsRunning(false);
+    setIsStopGoalModalOpen(false);
   };
 
   useEffect(() => {
@@ -174,6 +192,15 @@ export default function IndexPage() {
         studyLogId={studyLogId}
         hasStarted={hasStarted}
       />
+      <FinishGoalModal
+        isOpen={isStopGoalModalOpen}
+        onClose={() => setIsStopGoalModalOpen(false)}
+        onComplete={handleStopComplete}
+        timerId={timerId}
+        studyLogId={studyLogId}
+        hasStarted={hasStarted}
+        splitTimes={splitTimes}
+      />
       <h1 className="text-center text-[72px] font-bold text-[#4c79ff]/30 select-none">
         {isRunning ? studyTitle : '오늘도 열심히 달려봐요!'}
       </h1>
@@ -185,7 +212,7 @@ export default function IndexPage() {
         hasStarted={hasStarted}
         onStart={handleStart}
         onPause={handlePause}
-        onFinish={handleFinish}
+        onStop={handleStop}
         onReset={handleReset}
         onEdit={() => setIsEditGoalModalOpen(true)}
       />

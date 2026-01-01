@@ -41,3 +41,23 @@ export async function deleteTimer(timerId: string) {
 
   return response.data;
 }
+
+export async function stopTimer({
+  timerId,
+  splitTimes,
+  review,
+  tasks,
+}: {
+  timerId: string;
+  splitTimes: { date: string; timeSpent: number }[];
+  review: string;
+  tasks: { content: string; isCompleted: boolean }[];
+}) {
+  const response = await axiosInstance.post(`/api/timers/${timerId}/stop`, {
+    splitTimes,
+    review,
+    tasks,
+  });
+
+  return response.data;
+}
