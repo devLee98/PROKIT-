@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import editIcon from '../../assets/edit.svg';
-import { useUpdateStudyLog } from '../../hooks/mutation/use-update-study-log';
+import { useStopTimer } from '../../hooks/mutation/use-stop-timer';
 import { useGetDetailStudyLog } from '../../hooks/query/use-get-detail-study-log';
 import EditCard from '../edit-card';
 
-interface EditGoalModalProps {
+interface StopGoalModalProps {
   isOpen: boolean;
   onClose: () => void;
+  timerId: string;
   studyLogId: string;
   hasStarted: boolean;
+  splitTimes: Array<{ date: string; timeSpent: number }>;
+  onComplete: () => void;
 }
 
 interface Task {
@@ -18,32 +21,33 @@ interface Task {
   isCompleted: boolean;
 }
 
-export function EditGoalModal({
+export default function StopGoalModal({
   isOpen,
   onClose,
+  timerId,
   studyLogId,
   hasStarted,
-}: EditGoalModalProps) {
+  splitTimes,
+  onComplete,
+}: StopGoalModalProps) {
   const { data: detailStudyLogData } = useGetDetailStudyLog(
     studyLogId,
     hasStarted,
   );
-
-  // //lazy initializer
-  // const [tasks, setTasks] = useState<Task[]>(
-  //   () => detailStudyLogData?.data?.tasks ?? [],
-  // );
-
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [review, setReview] = useState('');
+  const { mutate: stopTimer } = useStopTimer({
+    timerId,
+    splitTimes,
+    review,
+    tasks,
+    studyLogId,
+  });
 
-  useEffect(() => {
-    if (isOpen && detailStudyLogData?.data?.tasks) {
-      setTasks(detailStudyLogData.data.tasks);
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }
-  }, [isOpen, detailStudyLogData]);
-
-  const { mutate: updateStudyLog } = useUpdateStudyLog(studyLogId, tasks);
+  const handleSave = () => {
+    stopTimer();
+    onComplete();
+  };
 
   const handleToggleTask = (id: string, isCompleted: boolean) => {
     setTasks((prevTasks) =>
@@ -52,15 +56,13 @@ export function EditGoalModal({
       ),
     );
   };
-  const handleSave = () => {
-    updateStudyLog();
-    onClose();
-  };
 
-  const handleCancel = () => {
-    onClose();
-  };
-
+  useEffect(() => {
+    if (isOpen && detailStudyLogData?.data?.tasks) {
+      setTasks(detailStudyLogData.data.tasks);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }
+  }, [isOpen, detailStudyLogData]);
   if (!isOpen) return null;
   return createPortal(
     <div
@@ -73,6 +75,10 @@ export function EditGoalModal({
       >
         <div className="mb-4">
           <div>
+            <div className="mb-9 flex flex-col gap-2">
+              <p>오늘도 수고하셨습니다!</p>
+              <p>완료한 일을 체크하고, 오늘의 학습 회고를 작성해 주세요.</p>
+            </div>
             <div className="flex gap-2">
               <input
                 type="text"
@@ -103,19 +109,23 @@ export function EditGoalModal({
                 ))}
               </div>
             </div>
+            <div>
+              <p>학습회고</p>
+              <textarea
+                value={review}
+                onChange={(e) => setReview(e.target.value)}
+                placeholder="학습회고를 입력해 주세요"
+                className="h-[84px] w-full rounded border border-gray-300 px-3 py-2"
+              />
+            </div>
           </div>
         </div>
         <div className="mt-9 flex items-end justify-end">
           <div className="flex h-[48px] gap-4">
+            <button className="w-[64px] bg-[#e5e7eb] px-4 py-3">취소</button>
             <button
-              onClick={handleCancel}
-              className="w-[64px] bg-[#e5e7eb] px-4 py-3"
-            >
-              취소
-            </button>
-            <button
-              onClick={handleSave}
               className="w-[100px] bg-[#e5e7eb] px-4 py-3"
+              onClick={handleSave}
             >
               저장하기
             </button>

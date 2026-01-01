@@ -1,15 +1,15 @@
-import finish from '../../assets/finish.svg';
 import listIcon from '../../assets/list.svg';
 import pause from '../../assets/pause.svg';
 import resetIcon from '../../assets/reset.svg';
 import start from '../../assets/start.svg';
+import stop from '../../assets/stop.svg';
 
 interface TimerControlsProps {
   isRunning: boolean;
   hasStarted: boolean;
   onStart: () => void;
   onPause: () => void;
-  onFinish: () => void;
+  onStop: () => void;
   onReset: () => void;
   onEdit: () => void;
 }
@@ -19,7 +19,7 @@ export function TimerControls({
   hasStarted,
   onStart,
   onPause,
-  onFinish,
+  onStop,
   onReset,
   onEdit,
 }: TimerControlsProps) {
@@ -28,7 +28,7 @@ export function TimerControls({
       <div className="flex items-center justify-center gap-20">
         <ControlButton icon={start} disabled={isRunning} onClick={onStart} />
         <ControlButton icon={pause} disabled={!isRunning} onClick={onPause} />
-        <ControlButton icon={finish} disabled={!isRunning} onClick={onFinish} />
+        <ControlButton icon={stop} disabled={!isRunning} onClick={onStop} />
       </div>
       {hasStarted && (
         <>

@@ -7,6 +7,8 @@ export function useDeleteTimer() {
     mutationFn: deleteTimer,
     onSuccess: () => {
       queryClient.removeQueries({ queryKey: ['timer'] });
+      // queryClient.removeQueries({ queryKey: ['detail-study-log', studyLogId] });
+      // queryClient.removeQueries({ queryKey: ['study-logs'] });
     },
   });
 }
