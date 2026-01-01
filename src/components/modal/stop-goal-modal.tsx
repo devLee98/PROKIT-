@@ -42,11 +42,11 @@ export default function StopGoalModal({
     review,
     tasks,
     studyLogId,
+    onComplete,
   });
 
   const handleSave = () => {
     stopTimer();
-    onComplete();
   };
 
   const handleToggleTask = (id: string, isCompleted: boolean) => {

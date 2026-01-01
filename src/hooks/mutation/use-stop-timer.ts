@@ -7,12 +7,14 @@ export function useStopTimer({
   review,
   tasks,
   studyLogId,
+  onComplete,
 }: {
   timerId: string;
   splitTimes: { date: string; timeSpent: number }[];
   review: string;
   tasks: { content: string; isCompleted: boolean }[];
   studyLogId: string;
+  onComplete: () => void;
 }) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -20,7 +22,7 @@ export function useStopTimer({
     onSuccess: () => {
       queryClient.removeQueries({ queryKey: ['timer'] });
       queryClient.removeQueries({ queryKey: ['detail-study-log', studyLogId] });
-      queryClient.removeQueries({ queryKey: ['study-logs'] });
+      onComplete();
     },
   });
 }

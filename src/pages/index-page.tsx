@@ -6,7 +6,7 @@ import { TimerControls } from '../components/timer/timer-controls';
 import { TimerDisplay } from '../components/timer/timer-display';
 import { useDeleteTimer } from '../hooks/mutation/use-delete-timer';
 import { useUpdateTimer } from '../hooks/mutation/use-update-timer';
-import { useGetStudyLogs } from '../hooks/query/use-get-study-logs';
+import { useGetDetailStudyLog } from '../hooks/query/use-get-detail-study-log';
 import { useGetTimer } from '../hooks/query/use-get-timer';
 import { useTimer } from '../hooks/use-timer';
 import { useTimerStore } from '../store/timer-store';
@@ -38,10 +38,15 @@ export default function IndexPage() {
   const studyLogId = timerData?.studyLogId;
   const timerId = timerData?.timerId;
 
-  const { data: studyLogsData } = useGetStudyLogs(isRunning);
-  const studyTitle = studyLogsData?.data?.studyLogs?.[0]?.todayGoal;
+  // const { data: studyLogsData } = useGetStudyLogs(isRunning);
+  // const studyTitle = studyLogsData?.data?.studyLogs?.[0]?.todayGoal;
+  const { data: detailStudyLogData } = useGetDetailStudyLog(
+    studyLogId,
+    hasStarted,
+  );
+  const studyTitle = detailStudyLogData?.data?.todayGoal;
   const { mutate: updateTimer } = useUpdateTimer();
-  const { mutate: deleteTimer } = useDeleteTimer();
+  const { mutate: deleteTimer } = useDeleteTimer(studyLogId);
   const { hours, minutes, seconds, start, stop, reset, setTime } = useTimer();
   const handleStart = () => {
     if (timerData) {
